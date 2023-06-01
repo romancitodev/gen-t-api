@@ -23,6 +23,7 @@ async fn connect() -> mongodb::error::Result<Database> {
         "mongodb+srv://{}:{}@gen-t-api.fvjfjtt.mongodb.net/?retryWrites=true&w=majority",
         user, password
     );
+    println!("{}", uri);
     let client_options = ClientOptions::parse(uri).await?;
     let client = Client::with_options(client_options)?;
     let database = client.database("giphy");
