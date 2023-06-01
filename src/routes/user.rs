@@ -22,7 +22,7 @@ pub async fn get_gif_id(db: &State<Database>, id: u32) -> Result<Json<Model>, St
             Some(doc) => Ok(doc.into()),
             None => Err("404 Gif not found".to_string()),
         },
-        Err(_) => Err("400 Bad request".to_string()),
+        Err(err) => Err(format!("400 Bad request: {}", err)),
     }
 }
 
