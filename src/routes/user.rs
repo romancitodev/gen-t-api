@@ -7,7 +7,6 @@ use crate::database::gif::{Model, ModelDocument};
 #[get("/gif/<id>")]
 pub async fn get_gif_id(db: &State<Database>, id: u32) -> Result<Json<Model>, String> {
     let db = db.collection::<ModelDocument>("gifs");
-    println!("{}", id);
     let result = db
         .find_one(
             doc! {

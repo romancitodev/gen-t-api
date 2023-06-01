@@ -20,10 +20,9 @@ async fn connect() -> mongodb::error::Result<Database> {
         std::env::var("MONGO_PWD").expect("mongo password not founded"),
     ];
     let uri = format!(
-        "mongodb+srv://{}:{}@gen-t-api.fvjfjtt.mongodb.net/?retryWrites=true&w=majority",
+        "mongodb+srv://{}:{}@gen-t-api.fvjfjtt.mongodb.net/?retryWrites=true&w=majority&authSource=admin",
         user, password
     );
-    println!("{}", uri);
     let client_options = ClientOptions::parse(uri).await?;
     let client = Client::with_options(client_options)?;
     let database = client.database("giphy");
