@@ -8,7 +8,10 @@ use routes::*;
 
 #[launch]
 async fn rocket() -> _ {
-    dotenv().expect("`.env` File not found...");
+    match dotenv() {
+        Ok(_) => {}
+        Err(_) => println!("File .env not founded, the program can crash"),
+    }
     rocket::build()
         .attach(database::init())
         .mount("/", routes![root, get_gif_id])
