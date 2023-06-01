@@ -522,9 +522,11 @@ dependencies = [
 name = "gen-t-api"
 version = "0.1.0"
 dependencies = [
+ "bson",
  "dotenvy",
  "mongodb",
  "rocket",
+ "rocket_db_pools",
  "serde",
  "serde_json",
 ]
@@ -1354,6 +1356,28 @@ dependencies = [
  "rocket_http",
  "syn 2.0.18",
  "unicode-xid",
+]
+
+[[package]]
+name = "rocket_db_pools"
+version = "0.1.0-rc.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e841c280fd98c042cd3d0353c31920da78a4eb19b12f0e0e3b7a362abe66bec0"
+dependencies = [
+ "mongodb",
+ "rocket",
+ "rocket_db_pools_codegen",
+ "version_check",
+]
+
+[[package]]
+name = "rocket_db_pools_codegen"
+version = "0.1.0-rc.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e26ff5b517c54ffe049209e6126705fd455529ff0b37c83023d56bf8fd677a76"
+dependencies = [
+ "devise",
+ "quote",
 ]
 
 [[package]]
