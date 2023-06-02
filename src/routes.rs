@@ -1,5 +1,5 @@
+mod gif;
 mod index;
-mod user;
 
+pub use gif::*;
 pub use index::*;
-pub use user::*;

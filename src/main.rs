@@ -2,6 +2,7 @@
 extern crate rocket;
 use dotenvy::dotenv;
 mod database;
+mod response;
 mod routes;
 
 use routes::*;
@@ -15,7 +16,7 @@ async fn rocket() -> _ {
     rocket::build()
         .attach(database::init())
         .attach(CORS)
-        .mount("/", routes![root, get_gif_id])
+        .mount("/", routes![root, get_gif_id, post_gif])
 }
 
 use rocket::fairing::{Fairing, Info, Kind};

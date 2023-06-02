@@ -1,3 +1,4 @@
+use bson::doc;
 use mongodb::bson::oid::ObjectId;
 use rocket::serde::json::Json;
 use serde::{Deserialize, Serialize};
@@ -5,9 +6,7 @@ use serde::{Deserialize, Serialize};
 /// HTTP Response
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Model {
-    pub _id: String,
-    /// Reference the _id field in Mongo Document
-    pub id: u32,
+    pub id: Option<i32>,
     pub url: String,
     pub name: String,
     pub category: String,
@@ -17,7 +16,7 @@ pub struct Model {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ModelDocument {
     pub _id: ObjectId,
-    pub id: u32,
+    pub id: i32,
     pub url: String,
     pub name: String,
     pub category: String,
@@ -33,11 +32,22 @@ impl From<ModelDocument> for Json<Model> {
             category,
         } = value;
         Json(Model {
-            _id: _id.to_string(),
-            id,
+            id: Some(id),
             url,
             name,
             category,
         })
+    }
+}
+
+impl From<Json<Model>> for ModelDocument {
+    fn from(value: Json<Model>) -> Self {
+        Self {
+            _id: ObjectId::new(),
+            id: value.id.unwrap_or(0),
+            url: value.url.to_owned(),
+            name: value.name.to_owned(),
+            category: value.category.to_owned(),
+        }
     }
 }
