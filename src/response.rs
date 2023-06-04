@@ -7,6 +7,7 @@ pub enum Status {
     BadRequest,
     Forbidden,
     NotFound,
+    Unauthorized,
     Custom(u16),
 }
 
@@ -15,6 +16,7 @@ impl Status {
         match self {
             Self::Accepted => 200,
             Self::BadRequest => 400,
+            Self::Unauthorized => 401,
             Self::Forbidden => 403,
             Self::NotFound => 404,
             Self::Custom(status) => *status,
@@ -37,6 +39,7 @@ impl ToString for Status {
         let status = match self {
             Self::Accepted => 200,
             Self::BadRequest => 400,
+            Self::Unauthorized => 401,
             Self::Forbidden => 403,
             Self::NotFound => 404,
             Self::Custom(status) => *status,
@@ -104,7 +107,7 @@ where
             .sized_body(body.len(), std::io::Cursor::new(body))
             .header(rocket::http::ContentType::JSON)
             .status(
-                rocket::http::Status::from_code(404)
+                rocket::http::Status::from_code(self.code.convert())
                     .unwrap_or(rocket::http::Status::InternalServerError),
             )
             .ok()

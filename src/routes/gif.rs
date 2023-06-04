@@ -1,8 +1,9 @@
 use bson::doc;
 use mongodb::Database;
-use rocket::{serde::json::Json, State};
+use rocket::{response::Redirect, serde::json::Json, State};
 
 use crate::{
+    auth::Auth,
     database::{
         gif::{Model, ModelDocument},
         incremental::AutoIncrement,
@@ -10,8 +11,13 @@ use crate::{
     response::{HttpResult, ResponseBuilder, Status},
 };
 
+#[catch(401)]
+pub async fn get_gif_id_unauthorized() -> Redirect {
+    Redirect::to(uri!("/api/v1/auth"))
+}
+
 #[get("/gif/<id>")]
-pub async fn get_gif_id(db: &State<Database>, id: u32) -> HttpResult<ModelDocument> {
+pub async fn get_gif_id(db: &State<Database>, _auth: Auth, id: u32) -> HttpResult<ModelDocument> {
     let db = db.collection::<ModelDocument>("gifs");
     let result = db
         .find_one(
@@ -33,7 +39,11 @@ pub async fn get_gif_id(db: &State<Database>, id: u32) -> HttpResult<ModelDocume
 
 // TODO : implement Bearer tokens
 #[post("/gif", data = "<input>", format = "json")]
-pub async fn post_gif(db: &State<Database>, input: Json<Model>) -> HttpResult<ModelDocument> {
+pub async fn post_gif(
+    db: &State<Database>,
+    input: Json<Model>,
+    _auth: Auth,
+) -> HttpResult<ModelDocument> {
     let gif_doc = db.collection::<ModelDocument>("gifs");
     let inc_doc = db.collection::<AutoIncrement>("counter");
     let mut auto = AutoIncrement {
@@ -55,6 +65,7 @@ pub async fn post_gif(db: &State<Database>, input: Json<Model>) -> HttpResult<Mo
     }
 }
 
-// fn validate_data(data: Json<Model>) -> HttpResult<ModelDocument> {
-//     if data.name.
-// }
+#[post("/gif", rank = 2)]
+pub async fn post_gif_id_unauthorized() -> Redirect {
+    Redirect::to(uri!("/api/v1/auth"))
+}

@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bson = "2.6.1"
+bson = {version = "2.6.1", features = ["chrono-0_4"]}
+chrono = "0.4.26"
 dotenvy = "0.15.7"
+jsonwebtoken = "8.3.0"
 mongodb = "2.5.0"
 rocket = {verion = "=0.5.0-rc.3", features= ["json"]}
 rocket_db_pools = { version = "0.1.0-rc.3", features = ["mongodb"] }

@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate rocket;
 use dotenvy::dotenv;
+mod auth;
 mod database;
 mod header;
 mod response;
@@ -16,7 +17,17 @@ async fn rocket() -> _ {
     rocket::build()
         .attach(database::init())
         .attach(CORS)
-        .mount("/api/v1/", routes![get_gif_id, post_gif])
+        .mount(
+            "/api/v1/",
+            routes![
+                get_gif_id,
+                post_gif_id_unauthorized,
+                post_gif,
+                get_auth,
+                post_auth
+            ],
+        )
+        .register("/api/v1/gif", catchers![get_gif_id_unauthorized])
     // .ignite()
 }
 
