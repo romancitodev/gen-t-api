@@ -3,7 +3,6 @@ extern crate rocket;
 use dotenvy::dotenv;
 mod auth;
 mod database;
-mod header;
 mod response;
 mod routes;
 
@@ -24,7 +23,8 @@ async fn rocket() -> _ {
                 post_gif_id_unauthorized,
                 post_gif,
                 get_auth,
-                post_auth
+                post_auth,
+                get_all_gifs
             ],
         )
         .register("/api/v1/gif", catchers![get_gif_id_unauthorized])

@@ -1,4 +1,5 @@
 use bson::doc;
+use futures::TryStreamExt;
 use mongodb::Database;
 use rocket::{response::Redirect, serde::json::Json, State};
 
@@ -31,13 +32,12 @@ pub async fn get_gif_id(db: &State<Database>, _auth: Auth, id: u32) -> HttpResul
     match result {
         Ok(document) => match document {
             Some(doc) => ResponseBuilder::build(Status::Accepted, doc),
-            None => ResponseBuilder::build_err(Status::NotFound, "Gif not found".into()),
+            None => ResponseBuilder::build_err(Status::NotFound, "Gif not found"),
         },
         Err(err) => ResponseBuilder::build_err(Status::BadRequest, format!("Bad request: {}", err)),
     }
 }
 
-// TODO : implement Bearer tokens
 #[post("/gif", data = "<input>", format = "json")]
 pub async fn post_gif(
     db: &State<Database>,
@@ -68,4 +68,20 @@ pub async fn post_gif(
 #[post("/gif", rank = 2)]
 pub async fn post_gif_id_unauthorized() -> Redirect {
     Redirect::to(uri!("/api/v1/auth"))
+}
+
+#[get("/gif/all")]
+pub async fn get_all_gifs(db: &State<Database>, _auth: Auth) -> HttpResult<Vec<ModelDocument>> {
+    let gif_doc = db.collection::<ModelDocument>("gifs");
+    let cursor = match gif_doc.find(None, None).await {
+        Ok(c) => c,
+        Err(err) => {
+            return ResponseBuilder::build_err(
+                Status::Custom(500),
+                format!("Error listing document: {err}"),
+            )
+        }
+    };
+    let gifs = cursor.try_collect().await.unwrap_or_else(|_| vec![]);
+    ResponseBuilder::build(Status::Accepted, gifs)
 }

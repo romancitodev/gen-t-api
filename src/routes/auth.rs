@@ -27,10 +27,7 @@ pub async fn post_auth(db: &State<Database>) -> HttpResult<ModelDocument> {
 
 #[get("/auth")]
 pub fn get_auth() -> HttpResult<()> {
-    ResponseBuilder::build_err(
-        Status::Unauthorized,
-        "The header must have a Bearer Token".into(),
-    )
+    ResponseBuilder::build_err(Status::Unauthorized, "Missing or invalid Bearer token")
 }
 
 #[derive(Debug, Serialize, Deserialize)]

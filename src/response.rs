@@ -58,8 +58,11 @@ impl<T> ResponseBuilder<T> {
         Ok(HttpResponse { code, data })
     }
 
-    pub fn build_err(code: Status, data: String) -> HttpResult<T> {
-        Err(HttpError { code, data })
+    pub fn build_err(code: Status, data: impl ToString) -> HttpResult<T> {
+        Err(HttpError {
+            code,
+            data: data.to_string(),
+        })
     }
 }
 
