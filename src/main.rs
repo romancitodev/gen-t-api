@@ -2,6 +2,7 @@
 extern crate rocket;
 use dotenvy::dotenv;
 mod database;
+mod header;
 mod response;
 mod routes;
 
@@ -9,14 +10,14 @@ use routes::*;
 
 #[launch]
 async fn rocket() -> _ {
-    match dotenv() {
-        Ok(_) => {}
-        Err(_) => println!("File .env not founded, the program can crash"),
-    }
+    if let Err(e) = dotenv() {
+        println!("File .env not found, the program can crash, reason {e}")
+    };
     rocket::build()
         .attach(database::init())
         .attach(CORS)
-        .mount("/", routes![root, get_gif_id, post_gif])
+        .mount("/api/v1/", routes![get_gif_id, post_gif])
+    // .ignite()
 }
 
 use rocket::fairing::{Fairing, Info, Kind};

@@ -7,7 +7,7 @@ use crate::{
         gif::{Model, ModelDocument},
         incremental::AutoIncrement,
     },
-    response::{HttpResult, Response, Status},
+    response::{HttpResult, ResponseBuilder, Status},
 };
 
 #[get("/gif/<id>")]
@@ -24,13 +24,14 @@ pub async fn get_gif_id(db: &State<Database>, id: u32) -> HttpResult<ModelDocume
 
     match result {
         Ok(document) => match document {
-            Some(doc) => Response::build(Status::Accepted, doc),
-            None => Response::build_err(Status::NotFound, "Gif not founded".into()),
+            Some(doc) => ResponseBuilder::build(Status::Accepted, doc),
+            None => ResponseBuilder::build_err(Status::NotFound, "Gif not found".into()),
         },
-        Err(err) => Response::build_err(Status::BadRequest, format!("Bad request: {}", err)),
+        Err(err) => ResponseBuilder::build_err(Status::BadRequest, format!("Bad request: {}", err)),
     }
 }
 
+// TODO : implement Bearer tokens
 #[post("/gif", data = "<input>", format = "json")]
 pub async fn post_gif(db: &State<Database>, input: Json<Model>) -> HttpResult<ModelDocument> {
     let gif_doc = db.collection::<ModelDocument>("gifs");
@@ -45,11 +46,15 @@ pub async fn post_gif(db: &State<Database>, input: Json<Model>) -> HttpResult<Mo
         Ok(id) => {
             doc.id = id;
         }
-        Err(response) => return Response::build_err(Status::BadRequest, response),
+        Err(response) => return ResponseBuilder::build_err(Status::BadRequest, response),
     };
 
     match gif_doc.insert_one(doc.clone(), None).await {
-        Ok(_) => Response::build(Status::Accepted, doc),
-        Err(err) => Response::build_err(Status::BadRequest, err.to_string()),
+        Ok(_) => ResponseBuilder::build(Status::Accepted, doc),
+        Err(err) => ResponseBuilder::build_err(Status::BadRequest, err.to_string()),
     }
 }
+
+// fn validate_data(data: Json<Model>) -> HttpResult<ModelDocument> {
+//     if data.name.
+// }

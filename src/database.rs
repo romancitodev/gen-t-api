@@ -15,6 +15,7 @@ pub fn init() -> AdHoc {
         }
     })
 }
+
 async fn connect() -> mongodb::error::Result<Database> {
     let [user, password] = [
         std::env::var("MONGO_USR").expect("mongo user not founded"),

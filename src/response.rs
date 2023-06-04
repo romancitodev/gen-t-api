@@ -1,41 +1,17 @@
 use bson::doc;
-use rocket::serde::json::Json;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Serialize, Deserialize)]
-pub struct Response<T> {
-    status: i32,
-    response: T,
-}
-
-impl<T: Serialize> Response<T> {
-    pub fn build(status: Status, response: T) -> HttpResult<T> {
-        let status = status.convert();
-        Ok(Json(Response { status, response }))
-    }
-
-    pub fn build_err(
-        status: Status,
-        response: String,
-    ) -> Result<Json<Response<T>>, Json<Response<String>>> {
-        let status = status.convert();
-        Err(Json(Response { status, response }))
-    }
-}
-
-pub type HttpResult<T> = Result<Json<Response<T>>, Json<Response<String>>>;
-
-#[repr(i32)]
+#[repr(u16)]
 pub enum Status {
-    Accepted = 200,
-    BadRequest = 400,
-    Forbidden = 403,
-    NotFound = 404,
-    Custom(i32),
+    Accepted,
+    BadRequest,
+    Forbidden,
+    NotFound,
+    Custom(u16),
 }
 
 impl Status {
-    pub fn convert(&self) -> i32 {
+    pub fn convert(&self) -> u16 {
         match self {
             Self::Accepted => 200,
             Self::BadRequest => 400,
@@ -45,3 +21,94 @@ impl Status {
         }
     }
 }
+
+impl Serialize for Status {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let value = self.convert();
+        serializer.serialize_u16(value)
+    }
+}
+
+impl ToString for Status {
+    fn to_string(&self) -> String {
+        let status = match self {
+            Self::Accepted => 200,
+            Self::BadRequest => 400,
+            Self::Forbidden => 403,
+            Self::NotFound => 404,
+            Self::Custom(status) => *status,
+        };
+        status.to_string()
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct ResponseBuilder<T> {
+    marker: std::marker::PhantomData<T>,
+}
+
+impl<T> ResponseBuilder<T> {
+    pub fn build(code: Status, data: T) -> HttpResult<T> {
+        Ok(HttpResponse { code, data })
+    }
+
+    pub fn build_err(code: Status, data: String) -> HttpResult<T> {
+        Err(HttpError { code, data })
+    }
+}
+
+#[derive(Serialize)]
+pub struct HttpResponse<T> {
+    code: Status,
+    data: T,
+}
+
+#[derive(Serialize)]
+pub struct HttpError {
+    code: Status,
+    data: String,
+}
+
+impl<'request, 'output, T> rocket::response::Responder<'request, 'output> for HttpResponse<T>
+where
+    'output: 'request,
+    T: Serialize,
+{
+    fn respond_to(self, _: &'request rocket::Request<'_>) -> rocket::response::Result<'output> {
+        // settings the body as `json`
+        let body = serde_json::to_string(&self).unwrap();
+        let mut response = rocket::Response::build();
+        response
+            .sized_body(body.len(), std::io::Cursor::new(body))
+            .header(rocket::http::ContentType::JSON)
+            .status(
+                rocket::http::Status::from_code(self.code.convert())
+                    .unwrap_or(rocket::http::Status::InternalServerError),
+            )
+            .ok()
+    }
+}
+
+impl<'request, 'output> rocket::response::Responder<'request, 'output> for HttpError
+where
+    'output: 'request,
+{
+    fn respond_to(self, _: &'request rocket::Request<'_>) -> rocket::response::Result<'output> {
+        // settings the body as `json`
+        let body = serde_json::to_string(&self).unwrap();
+        let mut response = rocket::Response::build();
+        response
+            .sized_body(body.len(), std::io::Cursor::new(body))
+            .header(rocket::http::ContentType::JSON)
+            .status(
+                rocket::http::Status::from_code(404)
+                    .unwrap_or(rocket::http::Status::InternalServerError),
+            )
+            .ok()
+    }
+}
+
+pub type HttpResult<T> = Result<HttpResponse<T>, HttpError>;
