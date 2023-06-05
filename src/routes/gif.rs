@@ -1,6 +1,6 @@
 use bson::doc;
-use futures::TryStreamExt;
-use mongodb::Database;
+use futures::{StreamExt, TryStreamExt};
+use mongodb::{options::FindOptions, Database};
 use rocket::{response::Redirect, serde::json::Json, State};
 
 use crate::{
@@ -17,7 +17,7 @@ pub async fn get_gif_id_unauthorized() -> Redirect {
     Redirect::to(uri!("/api/v1/auth"))
 }
 
-#[get("/gif/<id>")]
+#[get("/gifs/<id>")]
 pub async fn get_gif_id(db: &State<Database>, _auth: Auth, id: u32) -> HttpResult<ModelDocument> {
     let db = db.collection::<ModelDocument>("gifs");
     let result = db
@@ -38,7 +38,7 @@ pub async fn get_gif_id(db: &State<Database>, _auth: Auth, id: u32) -> HttpResul
     }
 }
 
-#[post("/gif", data = "<input>", format = "json")]
+#[post("/gifs", data = "<input>", format = "json")]
 pub async fn post_gif(
     db: &State<Database>,
     input: Json<Model>,
@@ -65,15 +65,30 @@ pub async fn post_gif(
     }
 }
 
-#[post("/gif", rank = 2)]
+#[post("/gifs", rank = 2)]
 pub async fn post_gif_id_unauthorized() -> Redirect {
     Redirect::to(uri!("/api/v1/auth"))
 }
 
-#[get("/gif/all")]
-pub async fn get_all_gifs(db: &State<Database>, _auth: Auth) -> HttpResult<Vec<ModelDocument>> {
+#[derive(Debug, FromForm)]
+pub struct QueryOptions {
+    page: Option<u64>,
+    limit: Option<i64>,
+}
+
+#[get("/gifs?<options..>")]
+pub async fn get_all_gifs(
+    db: &State<Database>,
+    _auth: Auth,
+    options: QueryOptions,
+) -> HttpResult<Vec<ModelDocument>> {
     let gif_doc = db.collection::<ModelDocument>("gifs");
-    let cursor = match gif_doc.find(None, None).await {
+    let max_gifs = options.limit.or(Some(25)).min(Some(50)); // establecemos que el maximo de gifs van a ser 50
+    let find_options = FindOptions::builder()
+        .limit(max_gifs)
+        .skip(options.page.unwrap_or(0) * max_gifs.unwrap() as u64);
+    let find_options = find_options.build();
+    let cursor = match gif_doc.find(None, find_options).await {
         Ok(c) => c,
         Err(err) => {
             return ResponseBuilder::build_err(

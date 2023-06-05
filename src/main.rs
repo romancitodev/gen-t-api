@@ -27,7 +27,7 @@ async fn rocket() -> _ {
                 get_all_gifs
             ],
         )
-        .register("/api/v1/gif", catchers![get_gif_id_unauthorized])
+        .register("/api/v1/gifs", catchers![get_gif_id_unauthorized])
     // .ignite()
 }
 
