@@ -4,6 +4,7 @@ use serde::Serialize;
 #[repr(u16)]
 pub enum Status {
     Accepted,
+    Created,
     BadRequest,
     Forbidden,
     NotFound,
@@ -15,6 +16,7 @@ impl Status {
     pub fn convert(&self) -> u16 {
         match self {
             Self::Accepted => 200,
+            Self::Created => 201,
             Self::BadRequest => 400,
             Self::Unauthorized => 401,
             Self::Forbidden => 403,
@@ -36,15 +38,7 @@ impl Serialize for Status {
 
 impl ToString for Status {
     fn to_string(&self) -> String {
-        let status = match self {
-            Self::Accepted => 200,
-            Self::BadRequest => 400,
-            Self::Unauthorized => 401,
-            Self::Forbidden => 403,
-            Self::NotFound => 404,
-            Self::Custom(status) => *status,
-        };
-        status.to_string()
+        self.convert().to_string()
     }
 }
 

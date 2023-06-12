@@ -19,7 +19,6 @@ impl<'r> FromRequest<'r> for AuthToken {
 
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let auth_header = request.headers().get_one("Authorization");
-
         match auth_header {
             Some(header_value) => {
                 if header_value.starts_with("Bearer ") {

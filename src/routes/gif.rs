@@ -17,6 +17,12 @@ pub async fn get_gif_id_unauthorized() -> Redirect {
     Redirect::to(uri!("/api/v1/auth"))
 }
 
+#[options("/<_..>")]
+pub fn handle_options() -> HttpResult<String> {
+    //! This endpoint is literally only for `CORS`
+    ResponseBuilder::build(Status::Accepted, "OK".into())
+}
+
 #[get("/gifs/<id>")]
 pub async fn get_gif_id(db: &State<Database>, _auth: Auth, id: u32) -> HttpResult<ModelDocument> {
     let db = db.collection::<ModelDocument>("gifs");
@@ -60,7 +66,7 @@ pub async fn post_gif(
     };
 
     match gif_doc.insert_one(doc.clone(), None).await {
-        Ok(_) => ResponseBuilder::build(Status::Accepted, doc),
+        Ok(_) => ResponseBuilder::build(Status::Created, doc),
         Err(err) => ResponseBuilder::build_err(Status::BadRequest, err.to_string()),
     }
 }

@@ -24,7 +24,8 @@ async fn rocket() -> _ {
                 post_gif,
                 get_auth,
                 post_auth,
-                get_all_gifs
+                get_all_gifs,
+                handle_options
             ],
         )
         .register("/api/v1/gifs", catchers![get_gif_id_unauthorized])
@@ -50,9 +51,12 @@ impl Fairing for CORS {
         response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
         response.set_header(Header::new(
             "Access-Control-Allow-Methods",
-            "POST, GET, PATCH, OPTIONS",
+            "GET, POST, PUT, DELETE, PATCH",
         ));
-        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Headers",
+            "Authorization, Content-Type",
+        ));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
 }
